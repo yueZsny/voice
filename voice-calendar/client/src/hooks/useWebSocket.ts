@@ -1,10 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import type { WsMessageIn, AppStatus } from "../types";
-import { WS_URL } from "../config";
-
-const IS_EXTENSION =
-  typeof import.meta !== "undefined" &&
-  (import.meta as any).env?.VITE_EXTENSION === "true";
+import { WS_URL, IS_EXTENSION } from "../config";
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
@@ -152,9 +148,10 @@ export function useWebSocket() {
 
   // ── 扩展模式：监听来自录音弹窗的后端结果 ──
   useEffect(() => {
-    if (!IS_EXTENSION) return;
+    // 只要 chrome.runtime 存在就监听（比 IS_EXTENSION 更可靠）
+    if (typeof chrome === "undefined" || !chrome.runtime?.onMessage) return;
+
     const listener = (msg: any) => {
-      // 录音弹窗将后端 WS 结果通过 chrome.runtime 转发过来
       if (
         msg.type === "asr-result" ||
         msg.type === "llm-result" ||
@@ -164,10 +161,12 @@ export function useWebSocket() {
         msg.type === "events-list" ||
         msg.type === "error"
       ) {
+        console.log("[WS-ext] 收到扩展消息:", msg.type);
         handleMessage(msg as WsMessageIn);
       }
     };
     chrome.runtime.onMessage.addListener(listener);
+    console.log("[WS-ext] 扩展消息监听器已注册");
     return () => {
       chrome.runtime.onMessage.removeListener(listener);
     };
