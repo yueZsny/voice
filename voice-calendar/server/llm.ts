@@ -89,11 +89,15 @@ function buildSystemPrompt(): string {
 11. "上午" ≈ 08:00-12:00, "下午" ≈ 12:00-18:00, "晚上" ≈ 18:00-24:00
 12. "全天" 或 "一整天" → is_all_day = true
 13. **日期最关键**：必须准确计算年月日。X月X日就是字面意思的月份和日期，不要多加一天或少一天。
+    - 如果用户说"5月30日"，start_time 必须是 ${year}-05-30，**绝不能**是 ${today} 或其他任何日期。
+    - 如果用户说"5月29日"，start_time 必须是 ${year}-05-29。
+    - 用户说的数字就是日期，逐字照抄即可，不要做任何转换或修正。
 
 ## 日期计算示例（非常重要，请逐字遵守）
 - "${year}年5月5日" → start_time = "${year}-05-05T09:00:00+08:00"
 - "${year}年12月25日" → start_time = "${year}-12-25T09:00:00+08:00"
 - 如果用户说"5月5日"，必须输出 "${year}-05-05"，**绝不能**输出 "${year}-05-06"
+- 如果用户说"5月30日"，必须输出 "${year}-05-30"，**绝不能**输出 "${today}"
 
 ## 重要注意事项
 - DELETE 操作的 match_keyword 是用于查找数据库中匹配事件的核心关键词，例如"出去玩"、"开会"、"吃饭"等。去除"删除"、"删去"、"取消"等动作词和时间词。
@@ -168,46 +172,56 @@ function correctAction(
  * 兜底纠正日期：从原文提取"X月X日"格式的明确日期，
  * 如果 LLM 返回的日期与之不符，强制修正。
  */
+/** 中文数字 → 阿拉伯数字映射 */
+const CN_DIGITS: Record<string, number> = {
+  一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10,
+  十一:11,十二:12,十三:13,十四:14,十五:15,十六:16,十七:17,十八:18,十九:19,
+  二十:20,二十一:21,二十二:22,二十三:23,二十四:24,二十五:25,二十六:26,二十七:27,二十八:28,二十九:29,
+  三十:30,三十一:31,
+};
+
+/** 从原始文本中提取明确日期 */
+function extractExplicitDate(text: string): { month: number; day: number } | null {
+  // 1) 阿拉伯数字：6月1日、12月25号、5.30、5/30
+  let md = text.match(/(\d{1,2})\s*[月.\-/]\s*(\d{1,2})\s*[日号]?/);
+  if (md) {
+    const m = parseInt(md[1]), d = parseInt(md[2]);
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return { month: m, day: d };
+  }
+  // 2) 中文数字：六月一日、十二月二十五号
+  const cnMonths = Object.keys(CN_DIGITS).filter(k => CN_DIGITS[k] <= 12).join("|");
+  const cnDays = Object.keys(CN_DIGITS).join("|");
+  md = text.match(new RegExp(`(${cnMonths})月\\s*(${cnDays})[日号]`));
+  if (md) {
+    const m = CN_DIGITS[md[1]], d = CN_DIGITS[md[2]];
+    if (m && d) return { month: m, day: d };
+  }
+  return null;
+}
+
 function correctDate(
   rawText: string,
   parsed: Record<string, unknown>
 ): { start_time: string; end_time: string; match_date?: string } {
-  let month = 0;
-  let day = 0;
+  const explicit = extractExplicitDate(rawText);
+  console.log(`[LLM] 🔍 correctDate: 原文="${rawText}", 提取日期=`, explicit);
 
-  // 1) 先匹配阿拉伯数字：6月1日、12月25号
-  let md = rawText.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
-  if (md) {
-    month = parseInt(md[1]);
-    day = parseInt(md[2]);
-  } else {
-    // 2) 不匹配则尝试中文数字：六月一日、十二月二十五号
-    const cnDigits: Record<string, number> = {
-      一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10,
-      十一:11,十二:12,十三:13,十四:14,十五:15,十六:16,十七:17,十八:18,十九:19,
-      二十:20,二十一:21,二十二:22,二十三:23,二十四:24,二十五:25,二十六:26,二十七:27,二十八:28,二十九:29,
-      三十:30,三十一:31,
-    };
-    // 月份：一到十二 月
-    md = rawText.match(/(一|二|三|四|五|六|七|八|九|十|十一|十二)月\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九|二十|二十一|二十二|二十三|二十四|二十五|二十六|二十七|二十八|二十九|三十|三十一)[日号]/);
-    if (md) {
-      month = cnDigits[md[1]] || 0;
-      day = cnDigits[md[2]] || 0;
-    }
+  if (!explicit) {
+    console.log(`[LLM] 🔍 correctDate: 未提取到明确日期，跳过纠正`);
+    return { start_time: parsed.start_time as string, end_time: parsed.end_time as string, match_date: parsed.match_date as string | undefined };
   }
 
-  if (month < 1 || month > 12 || day < 1 || day > 31) return { start_time: parsed.start_time as string, end_time: parsed.end_time as string, match_date: parsed.match_date as string | undefined };
-
+  const { month, day } = explicit;
   const now = new Date();
   const year = now.getFullYear();
   const expectedDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
   const llmDate = String(parsed.start_time || "").split("T")[0];
+  console.log(`[LLM] 🔍 correctDate: 期望=${expectedDate}, LLM返回=${llmDate}, 需纠正=${llmDate !== expectedDate}`);
 
   if (llmDate !== expectedDate) {
-    console.warn(`[LLM] ⚠️ 日期纠正: 原文"${md![0]}"→期望 ${expectedDate}，LLM返回 ${llmDate}，强制修正`);
+    console.warn(`[LLM] ⚠️ 日期纠正: "${rawText}" → 期望 ${expectedDate}，LLM返回 ${llmDate}，强制修正`);
 
-    // 保留 LLM 返回的时间部分，只替换日期
     const startTime = String(parsed.start_time || "");
     const endTime = String(parsed.end_time || "");
     const timePart = startTime.includes("T") ? startTime.split("T")[1] : "09:00:00+08:00";
@@ -277,8 +291,15 @@ export async function parseVoiceCommand(text: string): Promise<ParsedEvent | nul
     };
   } catch (error: any) {
     console.error("[LLM] DeepSeek API error:", error.message);
-    // Fallback to simple parser
-    return fallbackParser(text);
+    // Fallback to simple parser + date correction
+    const fallback = fallbackParser(text);
+    const corrected = correctDate(text, fallback as unknown as Record<string, unknown>);
+    return {
+      ...fallback,
+      start_time: corrected.start_time || fallback.start_time,
+      end_time: corrected.end_time || fallback.end_time,
+      match_date: corrected.match_date || fallback.match_date,
+    };
   }
 }
 

@@ -154,6 +154,3 @@ CREATE TABLE events (
 | DELETE | `/api/events/:id` | 删除日程 |
 | PUT | `/api/events/:id` | 更新日程 |
 
-## License
-
-MIT
