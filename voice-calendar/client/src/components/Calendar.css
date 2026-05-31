@@ -57,23 +57,10 @@
   background: var(--primary-light) !important;
 }
 
-/* ── 星期标题行 ── */
+/* ── 星期标题行（已隐藏——与日期对不齐）── */
 
 .calendar-wrapper .react-calendar__month-view__weekdays {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.calendar-wrapper .react-calendar__month-view__weekdays__weekday {
-  padding: 8px 0;
-}
-
-.calendar-wrapper .react-calendar__month-view__weekdays abbr {
-  text-decoration: none;
+  display: none !important;
 }
 
 /* ── 日期格子 ── */
