@@ -280,25 +280,65 @@ export async function parseVoiceCommand(text: string): Promise<ParsedEvent | nul
     // ── 兜底纠正日期：如果原文有"X月X日"但LLM日期不对，强制修正 ──
     const corrected = correctDate(text, parsed);
 
+    // ── 终极兜底：再次从原文提取日期，覆盖纠正结果（防止 correctDate 未生效）──
+    const finalDate = extractExplicitDate(text);
+    let finalStartTime = corrected.start_time || parsed.start_time || new Date().toISOString();
+    let finalEndTime = corrected.end_time || parsed.end_time || new Date(Date.now() + 3600000).toISOString();
+    let finalMatchDate = corrected.match_date || (parsed.match_date as string | undefined);
+
+    if (finalDate) {
+      const year = new Date().getFullYear();
+      const forceDate = `${year}-${String(finalDate.month).padStart(2, "0")}-${String(finalDate.day).padStart(2, "0")}`;
+      const currentDate = String(finalStartTime).split("T")[0];
+      if (currentDate !== forceDate) {
+        console.warn(`[LLM] 🛡️ 终极兜底纠正: 最终日期 ${currentDate} → ${forceDate}`);
+        const timePart = String(finalStartTime).includes("T") ? String(finalStartTime).split("T")[1] : "09:00:00+08:00";
+        const endTimePart = String(finalEndTime).includes("T") ? String(finalEndTime).split("T")[1] : "23:59:00+08:00";
+        finalStartTime = `${forceDate}T${timePart}`;
+        finalEndTime = `${forceDate}T${endTimePart}`;
+        finalMatchDate = forceDate;
+      }
+    }
+
+    console.log(`[LLM] 最终结果: action=${action}, start_time=${finalStartTime}`);
+
     return {
       action,
       title: parsed.title || "未命名事件",
-      start_time: corrected.start_time || parsed.start_time || new Date().toISOString(),
-      end_time: corrected.end_time || parsed.end_time || new Date(Date.now() + 3600000).toISOString(),
+      start_time: finalStartTime,
+      end_time: finalEndTime,
       is_all_day: parsed.is_all_day || false,
       match_keyword: parsed.match_keyword || undefined,
-      match_date: corrected.match_date || parsed.match_date || undefined,
+      match_date: finalMatchDate,
     };
   } catch (error: any) {
     console.error("[LLM] DeepSeek API error:", error.message);
     // Fallback to simple parser + date correction
     const fallback = fallbackParser(text);
     const corrected = correctDate(text, fallback as unknown as Record<string, unknown>);
+    let fbStart = corrected.start_time || fallback.start_time;
+    let fbEnd = corrected.end_time || fallback.end_time;
+    let fbMatch = corrected.match_date || fallback.match_date;
+
+    // 终极兜底
+    const fbDate = extractExplicitDate(text);
+    if (fbDate) {
+      const year = new Date().getFullYear();
+      const forceDate = `${year}-${String(fbDate.month).padStart(2, "0")}-${String(fbDate.day).padStart(2, "0")}`;
+      if (String(fbStart).split("T")[0] !== forceDate) {
+        const tp = String(fbStart).includes("T") ? String(fbStart).split("T")[1] : "09:00:00+08:00";
+        const ep = String(fbEnd).includes("T") ? String(fbEnd).split("T")[1] : "23:59:00+08:00";
+        fbStart = `${forceDate}T${tp}`;
+        fbEnd = `${forceDate}T${ep}`;
+        fbMatch = forceDate;
+      }
+    }
+
     return {
       ...fallback,
-      start_time: corrected.start_time || fallback.start_time,
-      end_time: corrected.end_time || fallback.end_time,
-      match_date: corrected.match_date || fallback.match_date,
+      start_time: fbStart,
+      end_time: fbEnd,
+      match_date: fbMatch,
     };
   }
 }
