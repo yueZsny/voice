@@ -65,7 +65,16 @@ async function startCapture() {
   updateTimer();
 
   // ── ② 直连 WebSocket（音频直接发送，不中继）──
-  await connectWS();
+  try {
+    await connectWS();
+  } catch (err) {
+    console.error('[Record] WS 连接失败:', err.message);
+    setError('无法连接到本地服务 (localhost:3001)，请确认后端已启动');
+    clearInterval(timerInterval);
+    chrome.runtime.sendMessage({ type: 'audioError', error: '无法连接到本地服务' });
+    setTimeout(() => window.close(), 4000);
+    return;
+  }
 
   // ── ③ 开始录音 ──
   const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -121,6 +130,7 @@ function connectWS() {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        console.log('[Record] WS 收到:', msg.type);
         // ── ⑤ 转发后端结果到侧边栏 ──
         if (msg.type === 'asr-result') {
           chrome.runtime.sendMessage({ type: 'asr-result', text: msg.text });
@@ -134,10 +144,16 @@ function connectWS() {
           chrome.runtime.sendMessage({ type: 'event-updated', event: msg.event, text: msg.text });
         } else if (msg.type === 'events-list') {
           chrome.runtime.sendMessage({ type: 'events-list', events: msg.events });
+          // 收到最终结果，自动关闭弹窗
+          setStatus('✅ 完成');
+          setTimeout(() => window.close(), 1200);
         } else if (msg.type === 'error') {
           chrome.runtime.sendMessage({ type: 'audioError', error: msg.message });
+          setTimeout(() => window.close(), 2500);
         }
-      } catch {}
+      } catch (e) {
+        console.error('[Record] 消息解析失败:', e);
+      }
     };
     ws.onclose = () => { ws = null; };
   });
