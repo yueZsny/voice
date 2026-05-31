@@ -10,6 +10,11 @@ import type { CalendarEvent, AppStatus } from "./types";
 import { API_BASE_URL, IS_EXTENSION } from "./config";
 import "./App.css";
 
+/** 获取本地日期字符串 YYYY-MM-DD（禁止用 toISOString，UTC 会偏移） */
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function App() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
@@ -106,7 +111,7 @@ function App() {
 
   // Fetch events for selected date
   const fetchEventsForDate = useCallback(async (date: Date) => {
-    const key = date.toISOString().split("T")[0];
+    const key = toLocalDateStr(date);
     try {
       console.log(`📅 加载 ${key} 日程...`);
       const res = await fetch(`${API_BASE_URL}/api/events?date=${key}`);
@@ -137,9 +142,9 @@ function App() {
 
   // ── 日程数据 ──
   const realToday = new Date();
-  const todayStr = realToday.toISOString().split("T")[0];
+  const todayStr = toLocalDateStr(realToday);
   const selectedDateStr = useMemo(
-    () => selectedDate.toISOString().split("T")[0],
+    () => toLocalDateStr(selectedDate),
     [selectedDate]
   );
 
@@ -170,7 +175,7 @@ function App() {
     () => {
       const threeDaysLater = new Date(realToday);
       threeDaysLater.setDate(threeDaysLater.getDate() + 3);
-      const cutoffStr = threeDaysLater.toISOString().split("T")[0];
+      const cutoffStr = toLocalDateStr(threeDaysLater);
       return allEvents
         .filter((e) => {
           const start = e.start_time.split("T")[0];
