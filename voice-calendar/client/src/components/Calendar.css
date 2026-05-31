@@ -63,15 +63,33 @@
   display: none !important;
 }
 
-/* ── 日期格子 ── */
+/* ── 月份视图：flex 撑满 ── */
+
+.calendar-wrapper .react-calendar__month-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.calendar-wrapper .react-calendar__month-view > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
 .calendar-wrapper .react-calendar__month-view__days {
-  gap: 2px;
+  flex: 1;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-content: stretch;
 }
+
+/* ── 日期格子 ── */
 
 .calendar-wrapper .react-calendar__tile {
   position: relative;
-  height: 44px;
+  flex: 1 1 calc(100% / 7);
+  min-height: 38px;
   display: flex;
   flex-direction: column;
   align-items: center;
