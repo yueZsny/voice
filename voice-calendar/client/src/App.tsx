@@ -119,6 +119,11 @@ function App() {
     }
   }, [setWsEvents]);
 
+  // 预连接 WebSocket，避免首次点击录音时等待连接
+  useEffect(() => {
+    connect().catch(() => {}); // 静默失败，点击时再重试
+  }, []);
+
   // Initial load — fetchEventsForMonth 自动拉当月+下月
   useEffect(() => {
     const now = new Date();

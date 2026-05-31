@@ -172,12 +172,30 @@ function correctDate(
   rawText: string,
   parsed: Record<string, unknown>
 ): { start_time: string; end_time: string; match_date?: string } {
-  // 提取 "X月X日" 或 "X月X号" 格式
-  const monthDayMatch = rawText.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
-  if (!monthDayMatch) return { start_time: parsed.start_time as string, end_time: parsed.end_time as string, match_date: parsed.match_date as string | undefined };
+  let month = 0;
+  let day = 0;
 
-  const month = parseInt(monthDayMatch[1]);
-  const day = parseInt(monthDayMatch[2]);
+  // 1) 先匹配阿拉伯数字：6月1日、12月25号
+  let md = rawText.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
+  if (md) {
+    month = parseInt(md[1]);
+    day = parseInt(md[2]);
+  } else {
+    // 2) 不匹配则尝试中文数字：六月一日、十二月二十五号
+    const cnDigits: Record<string, number> = {
+      一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10,
+      十一:11,十二:12,十三:13,十四:14,十五:15,十六:16,十七:17,十八:18,十九:19,
+      二十:20,二十一:21,二十二:22,二十三:23,二十四:24,二十五:25,二十六:26,二十七:27,二十八:28,二十九:29,
+      三十:30,三十一:31,
+    };
+    // 月份：一到十二 月
+    md = rawText.match(/(一|二|三|四|五|六|七|八|九|十|十一|十二)月\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九|二十|二十一|二十二|二十三|二十四|二十五|二十六|二十七|二十八|二十九|三十|三十一)[日号]/);
+    if (md) {
+      month = cnDigits[md[1]] || 0;
+      day = cnDigits[md[2]] || 0;
+    }
+  }
+
   if (month < 1 || month > 12 || day < 1 || day > 31) return { start_time: parsed.start_time as string, end_time: parsed.end_time as string, match_date: parsed.match_date as string | undefined };
 
   const now = new Date();
@@ -187,7 +205,7 @@ function correctDate(
   const llmDate = String(parsed.start_time || "").split("T")[0];
 
   if (llmDate !== expectedDate) {
-    console.warn(`[LLM] ⚠️ 日期纠正: 原文"${monthDayMatch[0]}"→期望 ${expectedDate}，LLM返回 ${llmDate}，强制修正`);
+    console.warn(`[LLM] ⚠️ 日期纠正: 原文"${md![0]}"→期望 ${expectedDate}，LLM返回 ${llmDate}，强制修正`);
 
     // 保留 LLM 返回的时间部分，只替换日期
     const startTime = String(parsed.start_time || "");
@@ -294,6 +312,30 @@ function fallbackParser(text: string): ParsedEvent {
     const d = new Date();
     d.setDate(d.getDate() + 3);
     targetDate = d.toISOString().split("T")[0];
+  } else {
+    // 明确日期：6月1日、六月一日、12月25号
+    const year = now.getFullYear();
+    // 阿拉伯数字
+    let md = text.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]/);
+    if (md) {
+      const m = parseInt(md[1]), d = parseInt(md[2]);
+      if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        targetDate = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+    } else {
+      // 中文数字
+      const cn: Record<string, number> = {
+        一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10,十一:11,十二:12,
+        十三:13,十四:14,十五:15,十六:16,十七:17,十八:18,十九:19,
+        二十:20,二十一:21,二十二:22,二十三:23,二十四:24,二十五:25,二十六:26,二十七:27,二十八:28,二十九:29,
+        三十:30,三十一:31,
+      };
+      md = text.match(/(一|二|三|四|五|六|七|八|九|十|十一|十二)月\s*(一|二|三|四|五|六|七|八|九|十|十一|十二|十三|十四|十五|十六|十七|十八|十九|二十|二十一|二十二|二十三|二十四|二十五|二十六|二十七|二十八|二十九|三十|三十一)[日号]/);
+      if (md) {
+        const m = cn[md[1]], d = cn[md[2]];
+        if (m && d) targetDate = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+    }
   }
 
   // ── 提取时间 ──
