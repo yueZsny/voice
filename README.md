@@ -1,5 +1,6 @@
 # 🎤 Voice Calendar — 语音日历
 
+视频链接：https://www.bilibili.com/video/BV1bLVQ6cEEt/?spm_id_from=333.1387.list.card_archive.click&vd_source=428ec483cf86e4f38656ec73cb37213d
 说一句话，轻松管理日程。支持 Web 端 + Chrome 扩展。
 
 ## 快速开始
