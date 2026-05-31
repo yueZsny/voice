@@ -1,0 +1,172 @@
+.calendar-wrapper {
+  width: 100%;
+}
+
+.calendar-wrapper .react-calendar {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+/* ── 导航栏 ── */
+
+.calendar-wrapper .react-calendar__navigation {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-wrapper .react-calendar__navigation button {
+  min-width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.calendar-wrapper .react-calendar__navigation button:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.calendar-wrapper .react-calendar__navigation button:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.calendar-wrapper .react-calendar__navigation__label {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-h);
+  flex-grow: 1 !important;
+  max-width: 60%;
+}
+
+.calendar-wrapper .react-calendar__navigation__label:hover {
+  background: var(--primary-light) !important;
+}
+
+/* ── 星期标题行 ── */
+
+.calendar-wrapper .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.calendar-wrapper .react-calendar__month-view__weekdays__weekday {
+  padding: 8px 0;
+}
+
+.calendar-wrapper .react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+/* ── 日期格子 ── */
+
+.calendar-wrapper .react-calendar__month-view__days {
+  gap: 2px;
+}
+
+.calendar-wrapper .react-calendar__tile {
+  position: relative;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--text);
+  transition: all var(--transition);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.calendar-wrapper .react-calendar__tile:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.calendar-wrapper .react-calendar__tile:disabled {
+  color: #d1d5db;
+  cursor: default;
+}
+
+.calendar-wrapper .react-calendar__tile:disabled:hover {
+  background: transparent;
+}
+
+/* ── 今天 ── */
+
+.calendar-wrapper .react-calendar__tile--now {
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
+  font-weight: 700;
+}
+
+.calendar-wrapper .react-calendar__tile--now:hover {
+  background: #e0e7ff !important;
+}
+
+/* ── 选中日期 ── */
+
+.calendar-wrapper .react-calendar__tile--active {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
+.calendar-wrapper .react-calendar__tile--active:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9) !important;
+}
+
+/* ── 相邻月份日期 ── */
+
+.calendar-wrapper .react-calendar__month-view__days__day--neighboringMonth {
+  color: #d1d5db;
+}
+
+/* ── 事件标记点 ── */
+
+.event-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--primary);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: all var(--transition);
+}
+
+.react-calendar__tile--now .event-dot {
+  background: var(--primary);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+}
+
+.react-calendar__tile--active .event-dot {
+  background: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.react-calendar__tile:hover .event-dot {
+  transform: translateX(-50%) scale(1.3);
+}

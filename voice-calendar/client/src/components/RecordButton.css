@@ -1,0 +1,134 @@
+.record-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.record-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: var(--card-bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  outline: none;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.record-button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.record-button:hover::before {
+  opacity: 0.15;
+}
+
+.record-button:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.record-button:active {
+  transform: scale(0.97);
+}
+
+/* ── 录音中状态 ── */
+
+.record-button.recording {
+  background: var(--danger-light);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+  animation: recordingPulse 2s ease-in-out infinite;
+}
+
+.record-button.recording::before {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  opacity: 0.2;
+}
+
+.record-button.recording:hover {
+  box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.15);
+}
+
+/* ── 处理中状态 ── */
+
+.record-button.processing {
+  background: var(--warning-light);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+  cursor: not-allowed;
+}
+
+.record-button.processing::before {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  opacity: 0.15;
+}
+
+.record-button:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── 图标 ── */
+
+.record-icon {
+  font-size: 32px;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.record-button.recording .record-icon {
+  animation: iconScale 1s ease-in-out infinite;
+}
+
+/* ── 标签 ── */
+
+.record-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+}
+
+.record-button.recording + .record-label {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.record-button.processing + .record-label {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* ── 动画 ── */
+
+@keyframes recordingPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes iconScale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}

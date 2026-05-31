@@ -1,0 +1,284 @@
+/* ══════════════════════════════════════════════════════════════
+   App Layout — 三栏布局
+   ══════════════════════════════════════════════════════════════ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  gap: 20px;
+}
+
+/* ── Header ── */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.app-brand h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Main: 三栏 Grid ── */
+
+.app-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-content: start;
+}
+
+/* ── 左栏：语音控制 ── */
+
+.sidebar--left {
+  order: 0;
+}
+
+.sidebar-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* ── 状态显示 ── */
+
+.status-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.asr-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--primary-light);
+  border: 1px solid #c7d2fe;
+  border-radius: var(--radius);
+  font-size: 13px;
+  animation: slideUp 0.3s ease;
+}
+
+.asr-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.asr-text {
+  color: #3730a3;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.feedback-display {
+  padding: 10px 14px;
+  background: var(--success-light);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: #166534;
+  animation: slideUp 0.3s ease;
+}
+
+.error-display {
+  padding: 10px 14px;
+  background: var(--danger-light);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: #991b1b;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 语音指令提示 ── */
+
+.voice-hints {
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.voice-hints-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 10px;
+}
+
+.voice-hints-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.voice-hints-list li {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 6px 10px;
+  background: var(--bg);
+  border-radius: 6px;
+  border-left: 2px solid var(--border);
+  transition: all var(--transition);
+  cursor: default;
+}
+
+.voice-hints-list li:hover {
+  border-left-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ── 中栏：日历 ── */
+
+.main-content {
+  order: 2;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+/* ── 右栏：日程列表 ── */
+
+.sidebar--right {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Footer ── */
+
+.app-footer {
+  text-align: center;
+  padding: 16px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   桌面端 ≥1024px：三栏 grid
+   ══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  .app-main {
+    grid-template-columns: 240px 1fr 420px;
+  }
+
+  .sidebar--left {
+    order: 0;
+  }
+
+  .main-content {
+    order: 1;
+    padding: 20px;
+  }
+
+  .sidebar--right {
+    order: 2;
+    max-height: calc(100dvh - 140px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .sidebar--right::-webkit-scrollbar {
+    width: 4px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   平板端 768px — 1023px：双栏
+   ══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-main {
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+  }
+
+  .sidebar--left {
+    order: 0;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+  }
+
+  .main-content {
+    order: 1;
+  }
+
+  .sidebar--right {
+    order: 2;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}

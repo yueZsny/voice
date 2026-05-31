@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C d:/qiniuRemote)",
+      "Bash(git -C d:/qiniuCloud log --all --full-history --oneline -50)"
+    ]
+  }
+}
