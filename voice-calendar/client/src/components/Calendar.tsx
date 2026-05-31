@@ -27,9 +27,14 @@ export default function Calendar({
     return set;
   }, [events]);
 
+  /** 本地日期字符串（禁止 toISOString，UTC 会偏移） */
+  function toLocalKey(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
   function tileContent({ date, view }: { date: Date; view: string }) {
     if (view !== "month") return null;
-    const key = date.toISOString().split("T")[0];
+    const key = toLocalKey(date);
     if (eventDates.has(key)) {
       return <span className="event-dot" />;
     }
